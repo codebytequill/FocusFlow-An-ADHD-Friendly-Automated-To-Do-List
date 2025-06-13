@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FocusFlow | Automated To-Do</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* General Styles & Dark Mode Theme */
+        :root {
+            --bg-color: #121212;
+            --surface-color: #1e1e1e;
+            --primary-color: #bb86fc;
+            --primary-variant: #3700b3;
+            --secondary-color: #03dac6;
+            --text-color: #e0e0e0;
+            --text-secondary: #a0a0a0;
+            --error-color: #cf6679;
+            --success-color: #66cdaa;
+            --urgent-color: #ffab91;
+            --email-color: #81d4fa;
+            --work-color: #a5d6a7;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        /* Main Container */
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background-color: var(--surface-color);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        header p {
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+        }
+
+        /* Input Form */
+        .task-input-form {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        #task-input {
+            flex-grow: 1;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            border: 2px solid transparent;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        #task-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        #add-task-btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            border: none;
+            background-color: var(--primary-color);
+            color: #000;
+            font-weight: 500;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+        }
+
+        #add-task-btn:hover {
+            background-color: var(--secondary-color);
+        }
+
+        #add-task-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* Automation Rules Display */
+        .rules-info {
+            background-color: rgba(255, 255, 255, 0.05);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+
+        .rules-info h3 {
+            color: var(--secondary-color);
+            margin-bottom: 0.75rem;
+        }
+        
+        .rules-info ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+
+        .rules-info li {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .rules-info code {
+            background-color: var(--bg-color);
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: var(--text-color);
+        }
+        
+        /* Task List */
+        #task-list {
+            list-style-type: none;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .task-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background-color: var(--bg-color);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            word-break: break-word;
+        }
+
+        .task-item .task-text {
+            flex-grow: 1;
+            position: relative;
+        }
+
+        /* Completed Task Style */
+        .task-item.completed .task-text {
+            text-decoration: line-through;
+            color: var(--text-secondary);
+            opacity: 0.7;
+        }
+
+        /* Automation Styling Classes */
+        .task-item.urgent { border-left: 5px solid var(--urgent-color); }
+        .task-item.email { border-left: 5px solid var(--email-color); }
+        .task-item.work { border-left: 5px solid var(--work-color); }
+
+        .task-item .icon {
+            margin-right: 0.5rem;
+            font-size: 1.2rem;
+        }
+        
+        /* Action Buttons */
+        .task-actions button {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: color 0.3s ease, transform 0.2s ease;
+            padding: 5px;
+        }
+        
+        .task-actions .complete-btn:hover { color: var(--success-color); transform: scale(1.1); }
+        .task-actions .delete-btn:hover { color: var(--error-color); transform: scale(1.1); }
+        
+        .task-item.completed .complete-btn { color: var(--success-color); }
+        
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>FocusFlow</h1>
+            <p>Your automated, distraction-free task list.</p>
+        </header>
+
+        <div class="task-input-form">
+            <input type="text" id="task-input" placeholder="Add a new task (e.g., 'Email boss about project')">
+            <button id="add-task-btn">Add Task</button>
+        </div>
+        
+        <div class="rules-info">
+            <h3>Automation Rules (IF/THEN)</h3>
+            <ul>
+                <li><strong>IF</strong> a task contains <code>urgent</code>, <code>asap</code>, or <code>!</code> <strong>THEN</strong> it's highlighted <span style="color: var(--urgent-color);">orange</span>.</li>
+                <li><strong>IF</strong> a task contains <code>email</code> or <code>@</code> <strong>THEN</strong> it's highlighted <span style="color: var(--email-color);">blue</span> and gets a 📧 icon.</li>
+                <li><strong>IF</strong> a task contains <code>work</code> or <code>meeting</code> <strong>THEN</strong> it's highlighted <span style="color: var(--work-color);">green</span> and gets a 💼 icon.</li>
+            </ul>
+        </div>
+        
+        <ul id="task-list">
+            <!-- Tasks will be dynamically added here -->
+        </ul>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- DOM ELEMENT REFERENCES ---
+            const taskInput = document.getElementById('task-input');
+            const addTaskBtn = document.getElementById('add-task-btn');
+            const taskList = document.getElementById('task-list');
+
+            // --- STATE MANAGEMENT ---
+            // Load tasks from localStorage or initialize an empty array
+            let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+
+            // --- AUTOMATION RULES ---
+            // These keywords trigger specific styles and icons.
+            const automationRules = [
+                { keywords: ['urgent', 'asap', '!'], className: 'urgent', icon: '🔥' },
+                { keywords: ['email', '@'], className: 'email', icon: '📧' },
+                { keywords: ['work', 'meeting'], className: 'work', icon: '💼' }
+            ];
+
+            // --- CORE FUNCTIONS ---
+
+            /**
+             * Saves the current tasks array to localStorage.
+             */
+            const saveTasks = () => {
+                localStorage.setItem('tasks', JSON.stringify(tasks));
+            };
+
+            /**
+             * Renders the tasks array to the DOM.
+             */
+            const renderTasks = () => {
+                // Clear the existing list to prevent duplicates
+                taskList.innerHTML = '';
+
+                // If no tasks, show a gentle message
+                if (tasks.length === 0) {
+                    taskList.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">All clear! Add a task to get started.</p>';
+                    return;
+                }
+                
+                tasks.forEach(task => {
+                    const listItem = document.createElement('li');
+                    listItem.classList.add('task-item');
+                    listItem.dataset.id = task.id;
+
+                    // Check for completion
+                    if (task.completed) {
+                        listItem.classList.add('completed');
+                    }
+
+                    // --- Apply Automation Rules ---
+                    let appliedIcon = '';
+                    const taskTextLower = task.text.toLowerCase();
+
+                    for (const rule of automationRules) {
+                        if (rule.keywords.some(keyword => taskTextLower.includes(keyword))) {
+                            listItem.classList.add(rule.className);
+                            if(rule.icon) appliedIcon = `<span class="icon">${rule.icon}</span>`;
+                            break; // Apply only the first matching rule
+                        }
+                    }
+
+                    // --- Create Task HTML ---
+                    listItem.innerHTML = `
+                        ${appliedIcon}
+                        <span class="task-text">${task.text}</span>
+                        <div class="task-actions">
+                            <button class="complete-btn" title="Mark as complete">✔</button>
+                            <button class="delete-btn" title="Delete task">✖</button>
+                        </div>
+                    `;
+
+                    // Append to the list
+                    taskList.appendChild(listItem);
+                });
+            };
+
+            /**
+             * Adds a new task to the list.
+             */
+            const addTask = () => {
+                const text = taskInput.value.trim();
+                if (text === '') {
+                    // Maybe add a little shake animation later for feedback
+                    return; 
+                }
+
+                const newTask = {
+                    id: Date.now(),
+                    text: text,
+                    completed: false
+                };
+
+                tasks.unshift(newTask); // Add to the beginning of the array
+                taskInput.value = '';
+                saveTasks();
+                renderTasks();
+            };
+
+            /**
+             * Toggles the completion status of a task.
+             * @param {number} id - The ID of the task to toggle.
+             */
+            const toggleComplete = (id) => {
+                const task = tasks.find(t => t.id === id);
+                if (task) {
+                    task.completed = !task.completed;
+                    saveTasks();
+                    renderTasks();
+                }
+            };
+            
+            /**
+             * Deletes a task from the list.
+             * @param {number} id - The ID of the task to delete.
+             */
+            const deleteTask = (id) => {
+                tasks = tasks.filter(t => t.id !== id);
+                saveTasks();
+                renderTasks();
+            };
+
+            // --- EVENT LISTENERS ---
+
+            // Listen for clicks on the "Add Task" button
+            addTaskBtn.addEventListener('click', addTask);
+
+            // Listen for the "Enter" key in the input field
+            taskInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    addTask();
+                }
+            });
+            
+            // Use event delegation for complete/delete buttons
+            taskList.addEventListener('click', (e) => {
+                const target = e.target;
+                const parentLi = target.closest('.task-item');
+
+                if (!parentLi) return;
+
+                const taskId = Number(parentLi.dataset.id);
+
+                if (target.classList.contains('complete-btn')) {
+                    toggleComplete(taskId);
+                } else if (target.classList.contains('delete-btn')) {
+                    deleteTask(taskId);
+                }
+            });
+
+            // --- INITIAL RENDER ---
+            renderTasks();
+        });
+    </script>
+</body>
+</html>
